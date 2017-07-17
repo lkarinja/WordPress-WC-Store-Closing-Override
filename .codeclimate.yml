@@ -1,4 +1,9 @@
 engines:
+  duplication:
+    enabled: true
+    config:
+      languages:
+      - php:
   phpmd:
     enabled: true
     checks:
@@ -14,6 +19,12 @@ engines:
         enabled: false
       Naming/LongVariable:
         enabled: false
+  phpcodesniffer:
+    enabled: true
+    config:
+      file_extensions: "php"
+      standard: "PSR1,PSR2"
 ratings:
   paths:
   - "**.php"
+  
