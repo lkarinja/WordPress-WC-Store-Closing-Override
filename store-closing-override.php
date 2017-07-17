@@ -27,18 +27,21 @@
 */
 
 // Prevents execution outside of core WordPress
-if(!defined('ABSPATH')){
+if(!defined('ABSPATH'))
+{
 	header('Status: 403 Forbidden');
 	header('HTTP/1.1 403 Forbidden');
 	exit;
 }
 
 // Make sure we can access Ozibal's 'storeclosingget' class
-if(!class_exists('storeclosingget')) {
+if(!class_exists('storeclosingget'))
+{
 	require_once plugin_dir_path(__FILE__) . '/..' . '/store-closing/storeclosing-class.php';
 }
 
-if(!class_exists('Store_Closing_Override')){
+if(!class_exists('Store_Closing_Override'))
+{
 	class Store_Closing_Override
 	{
 		// These are for the options found in the Admin Menu
@@ -69,7 +72,8 @@ if(!class_exists('Store_Closing_Override')){
 		/**
 		 * Initial initialization for the plugin, adding the options page in the admin menu
 		 */
-		public function init(){
+		public function init()
+		{
 			// Add options in the admin menu under WooCommerce
 			add_action('admin_menu', array($this, 'add_menu_options'));
 		}
@@ -80,7 +84,8 @@ if(!class_exists('Store_Closing_Override')){
 		 * Parts of this function are referenced from Terry Tsang (http://shop.terrytsang.com) Extra Fee Option Plugin (http://terrytsang.com/shop/shop/woocommerce-extra-fee-option/)
 		 * Licensed under GPL2
 		 */
-		public function add_menu_options(){
+		public function add_menu_options()
+		{
 			$woocommerce_page = 'woocommerce';
 			$settings_page = add_submenu_page(
 				$woocommerce_page,
@@ -111,12 +116,16 @@ if(!class_exists('Store_Closing_Override')){
 				// Try to load saved Store Closing Override options
 				$this->saved_options['store_closing_method'] = !isset($_POST['store_closing_method']) ? 'auto' : $_POST['store_closing_method'];
 
+				// For each options in the plugin
 				foreach($this->options as $field => $value)
 				{
 					// If there was an update to an option
-					if(get_option($field) != $this->saved_options[$field]){
+					if(get_option($field) != $this->saved_options[$field])
+					{
 						// Save the new value of that option
 						update_option($field, $this->saved_options[$field]);
+						// Recalculate status of the store
+						$this->override_store_close();
 					}
 				}
 
@@ -178,21 +187,39 @@ if(!class_exists('Store_Closing_Override')){
 			$store_closing_method = get_option('store_closing_method') ? get_option('store_closing_method') : 'auto';
 
 			// If Store Closing functionality should be done automatically
-			if($store_closing_method == 'auto'){
+			if($store_closing_method == 'auto')
+			{
 				// If the store is closed
-				if($this->is_store_closed()){
+				if($this->is_store_closed())
+				{
 					// Instead of using Ozibal's Store Closing plugin method of displaying a closed store...
 					$this->remove_storeclosing_disable_hooks();
 
 					// Use our own method to specifically disable ALL cart related buttons
 					$this->remove_cart_buttons();
+
+					// Set the option 'store_status' to 'closed' (The store is closed)
+					update_option('store_status', 'closed');
 				}
+				// If the store is not closed
+				else
+				{
+					// Set the option 'store_status' to 'open' (The store is open)
+					update_option('store_status', 'open');
+				}
+			}
 			// If the Store should be forced to Open
-			}elseif($store_closing_method == 'force_open'){
+			elseif($store_closing_method == 'force_open')
+			{
 				// Remove all of Ozibal's hooks to prevent store closing messages from displaying
 				$this->remove_all_parent_hooks();
+
+				// Set the option 'store_status' to 'open' (The store is open)
+				update_option('store_status', 'open');
+			}
 			// If the Store should be forced to Closed
-			}elseif($store_closing_method == 'force_closed'){
+			elseif($store_closing_method == 'force_closed')
+			{
 				// We need to use reflection to modify our own instance of Ozibal's plugin to access options which were declared private instead of protected
 				$ozibal_store_closing = new storeclosingget();
 				$ref_ozibal_store_closing = new ReflectionClass($ozibal_store_closing);
@@ -222,13 +249,17 @@ if(!class_exists('Store_Closing_Override')){
 
 				// Use our own method to specifically disable ALL cart related buttons
 				$this->remove_cart_buttons();
+
+				// Set the option 'store_status' to 'closed' (The store is closed)
+				update_option('store_status', 'closed');
 			}
 		}
 
 		/**
 		 * Check if the store is closed according to Ozibal's Store Closing plugin
 		 */
-		public function is_store_closed(){
+		public function is_store_closed()
+		{
 			// If there was a hook to any of the following
 			if( $this->has_class_action('woocommerce_before_add_to_cart_button', 'storeclosingget', 'storeclosing_show') ||
 				$this->has_class_action('woocommerce_review_order_before_payment', 'storeclosingget', 'storeclosing_show') ||
@@ -238,7 +269,9 @@ if(!class_exists('Store_Closing_Override')){
 			){
 				// Store is Closed
 				return true;
-			}else{
+			}
+			else
+			{
 				// Store is Opened
 				return false;
 			}
@@ -247,7 +280,8 @@ if(!class_exists('Store_Closing_Override')){
 		/**
 		 * Remove all references to adding items to cart and checking out throughout the store
 		 */
-		public function remove_cart_buttons(){
+		public function remove_cart_buttons()
+		{
 			?><style>
 				.woocommerce li.product .entry-header .button,
 				.woocommerce-page li.product .entry-header .button,
@@ -267,7 +301,8 @@ if(!class_exists('Store_Closing_Override')){
 		/**
 		 * Remove all hooks from Ozibal's Store Closing plugin, preventing the store from closing
 		 */
-		protected function remove_all_parent_hooks(){
+		protected function remove_all_parent_hooks()
+		{
 			$this->remove_storeclosing_disable_hooks();
 			$this->remove_storeclosing_show_hooks();
 		}
@@ -275,7 +310,8 @@ if(!class_exists('Store_Closing_Override')){
 		/**
 		 * Remove hooks calling "storeclosing_disable" (Disables cart related buttons) from Ozibal's Store Closing plugin
 		 */
-		protected function remove_storeclosing_disable_hooks(){
+		protected function remove_storeclosing_disable_hooks()
+		{
 			$this->remove_class_action('woocommerce_after_single_product', 'storeclosingget', 'storeclosing_disable');
 			$this->remove_class_action('woocommerce_proceed_to_checkout', 'storeclosingget', 'storeclosing_disable');
 			$this->remove_class_action('woocommerce_review_order_before_submit', 'storeclosingget', 'storeclosing_disable');
@@ -284,7 +320,8 @@ if(!class_exists('Store_Closing_Override')){
 		/**
 		 * Remove hooks calling "storeclosing_show" (Shows the close message) from Ozibal's Store Closing plugin
 		 */
-		protected function remove_storeclosing_show_hooks(){
+		protected function remove_storeclosing_show_hooks()
+		{
 			$this->remove_class_action('woocommerce_before_add_to_cart_button', 'storeclosingget', 'storeclosing_show');
 			$this->remove_class_action('woocommerce_review_order_before_payment', 'storeclosingget', 'storeclosing_show');
 		}
