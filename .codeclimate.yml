@@ -1,12 +1,4 @@
 engines:
-  duplication:
-    enabled: true
-    config:
-      languages:
-      - php:
-      - javascript:
-  fixme:
-    enabled: true
   phpmd:
     enabled: true
     checks:
