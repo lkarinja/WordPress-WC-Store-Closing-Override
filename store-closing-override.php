@@ -204,6 +204,8 @@ if(!class_exists('Store_Closing_Override'))
 				// If the store is not closed
 				else
 				{
+					// Remove all of Ozibal's hooks to prevent store closing messages from displaying
+					$this->remove_all_parent_hooks();
 					// Set the option 'store_status' to 'open' (The store is open)
 					update_option('store_status', 'open');
 				}
@@ -294,11 +296,11 @@ if(!class_exists('Store_Closing_Override'))
 				($day_of_the_week == 3 &&
 					$now->getTimestamp() < $close->getTimestamp())
 			){
-				return true;
+				return false;
 			}
 			else
 			{
-				return false;
+				return true;
 			}
 		}
 
