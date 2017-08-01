@@ -260,6 +260,7 @@ if(!class_exists('Store_Closing_Override'))
 		 */
 		public function is_store_closed()
 		{
+			/*
 			// If there was a hook to any of the following
 			if( $this->has_class_action('woocommerce_before_add_to_cart_button', 'storeclosingget', 'storeclosing_show') ||
 				$this->has_class_action('woocommerce_review_order_before_payment', 'storeclosingget', 'storeclosing_show') ||
@@ -273,6 +274,30 @@ if(!class_exists('Store_Closing_Override'))
 			else
 			{
 				// Store is Opened
+				return false;
+			}
+			*/
+			$now = new DateTime('Now', new DateTimeZone('America/New_York'));
+			$open = new DateTime('12:00', new DateTimeZone('America/New_York'));
+			$close = new DateTime('7:30', new DateTimeZone('America/New_York'));
+
+			$day_of_the_week = $now->format("N");
+			$time_of_the_day = $now->format("H:i");
+
+			if(
+				// Monday, Tuesday, or Sunday
+				in_array($day_of_the_week, array(1, 2, 7)) ||
+				// Saturday after 12:00
+				($day_of_the_week == 6 &&
+					$now->getTimestamp() > $open->getTimestamp()) ||
+				// Wednesday Before 7:30
+				($day_of_the_week == 3 &&
+					$now->getTimestamp() < $close->getTimestamp())
+			){
+				return true;
+			}
+			else
+			{
 				return false;
 			}
 		}
