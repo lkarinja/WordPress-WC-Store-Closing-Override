@@ -204,6 +204,8 @@ if(!class_exists('Store_Closing_Override'))
 				// If the store is not closed
 				else
 				{
+					// Remove all of Ozibal's hooks to prevent store closing messages from displaying
+					$this->remove_all_parent_hooks();
 					// Set the option 'store_status' to 'open' (The store is open)
 					update_option('store_status', 'open');
 				}
@@ -248,7 +250,8 @@ if(!class_exists('Store_Closing_Override'))
 				add_action('woocommerce_review_order_before_payment', array($ozibal_store_closing, 'storeclosing_show'), 10);
 
 				// Use our own method to specifically disable ALL cart related buttons
-				$this->remove_cart_buttons();
+				//$this->remove_cart_buttons();
+				add_action('wp_loaded', array($this, 'remove_cart_buttons'), 10);
 
 				// Set the option 'store_status' to 'closed' (The store is closed)
 				update_option('store_status', 'closed');
@@ -260,6 +263,7 @@ if(!class_exists('Store_Closing_Override'))
 		 */
 		public function is_store_closed()
 		{
+			/*
 			// If there was a hook to any of the following
 			if( $this->has_class_action('woocommerce_before_add_to_cart_button', 'storeclosingget', 'storeclosing_show') ||
 				$this->has_class_action('woocommerce_review_order_before_payment', 'storeclosingget', 'storeclosing_show') ||
@@ -275,6 +279,30 @@ if(!class_exists('Store_Closing_Override'))
 				// Store is Opened
 				return false;
 			}
+			*/
+			$now = new DateTime('Now', new DateTimeZone('America/New_York'));
+			$open = new DateTime('12:00', new DateTimeZone('America/New_York'));
+			$close = new DateTime('7:30', new DateTimeZone('America/New_York'));
+
+			$day_of_the_week = $now->format("N");
+			$time_of_the_day = $now->format("H:i");
+
+			if(
+				// Monday, Tuesday, or Sunday
+				in_array($day_of_the_week, array(1, 2, 7)) ||
+				// Saturday after 12:00
+				($day_of_the_week == 6 &&
+					$now->getTimestamp() > $open->getTimestamp()) ||
+				// Wednesday Before 7:30
+				($day_of_the_week == 3 &&
+					$now->getTimestamp() < $close->getTimestamp())
+			){
+				return false;
+			}
+			else
+			{
+				return true;
+			}
 		}
 
 		/**
@@ -282,20 +310,24 @@ if(!class_exists('Store_Closing_Override'))
 		 */
 		public function remove_cart_buttons()
 		{
-			?><style>
-				.woocommerce li.product .entry-header .button,
-				.woocommerce-page li.product .entry-header .button,
-				.woocommerce .quantity,
-				.woocommerce-page .quantity,
-				.woocommerce .single_add_to_cart_button,
-				.woocommerce-page .single_add_to_cart_button,
-				.woocommerce-page .checkout-button,
-				.woocommerce #payment,
-				.woocommerce-page .add_to_cart_button
-				{
-					display: none !important;
-				}
-			</style><?php
+			if(!is_admin())
+			{
+				echo
+				"<style>
+					.woocommerce li.product .entry-header .button,
+					.woocommerce-page li.product .entry-header .button,
+					.woocommerce .quantity,
+					.woocommerce-page .quantity,
+					.woocommerce .single_add_to_cart_button,
+					.woocommerce-page .single_add_to_cart_button,
+					.woocommerce-page .checkout-button,
+					.woocommerce #payment,
+					.woocommerce-page .add_to_cart_button
+					{
+						display: none !important;
+					}
+				</style>";
+			}
 		}
 
 		/**
