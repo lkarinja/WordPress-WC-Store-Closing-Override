@@ -2,7 +2,7 @@
 /*
 	Plugin Name: Store Closing Override
 	Description: Overrides some functionality from <a href="http://dev.4gendesign.com/">Ozibal's</a> <a href="http://dev.4gendesign.com/magaza-kapama/">Store Closing</a> plugin
-	Version: 1.0.0
+	Version: 1.0.1
 	Author: <a href="https://github.com/lkarinja">Leejae Karinja</a>
 	License: GPL3
 	License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -192,6 +192,9 @@ if(!class_exists('Store_Closing_Override'))
 				// If the store is closed
 				if($this->is_store_closed())
 				{
+					// Close the store with Ozibal's plugin to display the notification
+					$this->ozibal_close_with_reflection();
+
 					// Instead of using Ozibal's Store Closing plugin method of displaying a closed store...
 					$this->remove_storeclosing_disable_hooks();
 
@@ -222,32 +225,8 @@ if(!class_exists('Store_Closing_Override'))
 			// If the Store should be forced to Closed
 			elseif($store_closing_method == 'force_closed')
 			{
-				// We need to use reflection to modify our own instance of Ozibal's plugin to access options which were declared private instead of protected
-				$ozibal_store_closing = new storeclosingget();
-				$ref_ozibal_store_closing = new ReflectionClass($ozibal_store_closing);
-
-				// We need to manually set our instance of Ozibal's plugin variable 'store_check' as 'CLOSE'
-				$ref_ozibal_store_closing_store_check = $ref_ozibal_store_closing->getProperty('store_check');
-				$ref_ozibal_store_closing_store_check->setAccessible(true);
-				$ref_ozibal_store_closing_store_check->setValue($ozibal_store_closing, 'CLOSE');
-
-				// We need to manually edit our instance of Ozibal's plugin variable 'storeclosing_options' to remove some custom formatting
-				$ref_ozibal_store_closing_storeclosing_options = $ref_ozibal_store_closing->getProperty('storeclosing_options');
-				$ref_ozibal_store_closing_storeclosing_options->setAccessible(true);
-				$storeclosing_options = $ref_ozibal_store_closing_storeclosing_options->getValue($ozibal_store_closing);
-				$storeclosing_options[0][1] = str_replace('[tstamp]', '', $storeclosing_options[0][1]);
-				$storeclosing_options[0][1] = str_replace('[countdown]', '', $storeclosing_options[0][1]);
-				$ref_ozibal_store_closing_storeclosing_options->setValue($ozibal_store_closing, $storeclosing_options);
-
-				// Remove all hooks that might have been created using our instance of Ozibal's plugin
-				$this->remove_all_parent_hooks();
-
-				// Manually format the Store Closing Notification with Ozibal's plugin
-				$ozibal_store_closing->storeclosing_notification(0, 0);
-
-				// Add Ozibal's notification messages for a closed store
-				add_action('woocommerce_before_add_to_cart_button', array($ozibal_store_closing, 'storeclosing_show'), 10);
-				add_action('woocommerce_review_order_before_payment', array($ozibal_store_closing, 'storeclosing_show'), 10);
+				// Close the store with Ozibal's plugin to display the notification
+				$this->ozibal_close_with_reflection();
 
 				// Use our own method to specifically disable ALL cart related buttons
 				//$this->remove_cart_buttons();
@@ -256,6 +235,39 @@ if(!class_exists('Store_Closing_Override'))
 				// Set the option 'store_status' to 'closed' (The store is closed)
 				update_option('store_status', 'closed');
 			}
+		}
+
+		/**
+		 * Uses reflection to close the store with Ozibal's Store Closeing plugin, which allows the notification set in Ozibal's plugin to be displayed
+		 */
+		public function ozibal_close_with_reflection()
+		{
+			// We need to use reflection to modify our own instance of Ozibal's plugin to access options which were declared private instead of protected
+			$ozibal_store_closing = new storeclosingget();
+			$ref_ozibal_store_closing = new ReflectionClass($ozibal_store_closing);
+
+			// We need to manually set our instance of Ozibal's plugin variable 'store_check' as 'CLOSE'
+			$ref_ozibal_store_closing_store_check = $ref_ozibal_store_closing->getProperty('store_check');
+			$ref_ozibal_store_closing_store_check->setAccessible(true);
+			$ref_ozibal_store_closing_store_check->setValue($ozibal_store_closing, 'CLOSE');
+
+			// We need to manually edit our instance of Ozibal's plugin variable 'storeclosing_options' to remove some custom formatting
+			$ref_ozibal_store_closing_storeclosing_options = $ref_ozibal_store_closing->getProperty('storeclosing_options');
+			$ref_ozibal_store_closing_storeclosing_options->setAccessible(true);
+			$storeclosing_options = $ref_ozibal_store_closing_storeclosing_options->getValue($ozibal_store_closing);
+			$storeclosing_options[0][1] = str_replace('[tstamp]', '', $storeclosing_options[0][1]);
+			$storeclosing_options[0][1] = str_replace('[countdown]', '', $storeclosing_options[0][1]);
+			$ref_ozibal_store_closing_storeclosing_options->setValue($ozibal_store_closing, $storeclosing_options);
+
+			// Remove all hooks that might have been created using our instance of Ozibal's plugin
+			$this->remove_all_parent_hooks();
+
+			// Manually format the Store Closing Notification with Ozibal's plugin
+			$ozibal_store_closing->storeclosing_notification(0, 0);
+
+			// Add Ozibal's notification messages for a closed store
+			add_action('woocommerce_before_add_to_cart_button', array($ozibal_store_closing, 'storeclosing_show'), 10);
+			add_action('woocommerce_review_order_before_payment', array($ozibal_store_closing, 'storeclosing_show'), 10);
 		}
 
 		/**
