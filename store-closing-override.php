@@ -2,7 +2,7 @@
 /*
 	Plugin Name: Store Closing Override
 	Description: Overrides some functionality from <a href="http://dev.4gendesign.com/">Ozibal's</a> <a href="http://dev.4gendesign.com/magaza-kapama/">Store Closing</a> plugin
-	Version: 1.0.1
+	Version: 2.0.0
 	Author: <a href="https://github.com/lkarinja">Leejae Karinja</a>
 	License: GPL3
 	License URI: https://www.gnu.org/licenses/gpl-3.0.html
@@ -65,6 +65,10 @@ if(!class_exists('Store_Closing_Override'))
 			// Store Closing Override Options
 			$this->options = array(
 				'store_closing_method' => 'auto',
+				'store_closing_open_day' => '6', // Saturday
+				'store_closing_open_time' => '12:00',
+				'store_closing_close_day' => '3', // Wednesday
+				'store_closing_close_time' => '7:30',
 			);
 			$this->saved_options = array();
 		}
@@ -115,6 +119,10 @@ if(!class_exists('Store_Closing_Override'))
 
 				// Try to load saved Store Closing Override options
 				$this->saved_options['store_closing_method'] = !isset($_POST['store_closing_method']) ? 'auto' : $_POST['store_closing_method'];
+				$this->saved_options['store_closing_open_day'] = !isset($_POST['store_closing_open_day']) ? '6' : $_POST['store_closing_open_day'];
+				$this->saved_options['store_closing_open_time'] = !isset($_POST['store_closing_open_time']) ? '12:00' : $_POST['store_closing_open_time'];
+				$this->saved_options['store_closing_close_day'] = !isset($_POST['store_closing_close_day']) ? '3' : $_POST['store_closing_close_day'];
+				$this->saved_options['store_closing_close_time'] = !isset($_POST['store_closing_close_time']) ? '7:30' : $_POST['store_closing_close_time'];
 
 				// For each options in the plugin
 				foreach($this->options as $field => $value)
@@ -135,6 +143,10 @@ if(!class_exists('Store_Closing_Override'))
 
 			// Store Closing Override options
 			$store_closing_method = get_option('store_closing_method') ? get_option('store_closing_method') : 'auto';
+			$store_closing_open_day = get_option('store_closing_open_day') ? get_option('store_closing_open_day') : '6';
+			$store_closing_open_time = get_option('store_closing_open_time') ? get_option('store_closing_open_time') : '12:00';
+			$store_closing_close_day = get_option('store_closing_close_day') ? get_option('store_closing_close_day') : '3';
+			$store_closing_close_time = get_option('store_closing_close_time') ? get_option('store_closing_close_time') : '7:30';
 
 			$actionurl = $_SERVER['REQUEST_URI'];
 			$nonce = wp_create_nonce($this->textdomain);
@@ -158,7 +170,32 @@ if(!class_exists('Store_Closing_Override'))
 						<tr>
 							<td>
 								<ul>
-									<li><?php _e('Auto will Open and Close the store automatically (Open at Saturday at 12:00PM and Close at Wednesday 7:00AM)', $this->textdomain); ?></li>
+									<li>
+										<?php _e('Auto will Open and Close the store automatically (Open on', $this->textdomain); ?>
+										<select name="store_closing_open_day">
+											<option value="1" <?php if($store_closing_open_day == '1') { echo 'selected="selected"'; } ?>><?php _e('Monday', $this->textdomain); ?></option>
+											<option value="2" <?php if($store_closing_open_day == '2') { echo 'selected="selected"'; } ?>><?php _e('Tuesday', $this->textdomain); ?></option>
+											<option value="3" <?php if($store_closing_open_day == '3') { echo 'selected="selected"'; } ?>><?php _e('Wednesday', $this->textdomain); ?></option>
+											<option value="4" <?php if($store_closing_open_day == '4') { echo 'selected="selected"'; } ?>><?php _e('Thursday', $this->textdomain); ?></option>
+											<option value="5" <?php if($store_closing_open_day == '5') { echo 'selected="selected"'; } ?>><?php _e('Friday', $this->textdomain); ?></option>
+											<option value="6" <?php if($store_closing_open_day == '6') { echo 'selected="selected"'; } ?>><?php _e('Saturday', $this->textdomain); ?></option>
+											<option value="7" <?php if($store_closing_open_day == '7') { echo 'selected="selected"'; } ?>><?php _e('Sunday', $this->textdomain); ?></option>
+										</select>
+										<?php _e('at', $this->textdomain); ?>
+										<input type="text" value="<?php echo esc_attr($store_closing_open_time); ?>" name="store_closing_open_time"/>
+										<?php _e('and Close on', $this->textdomain); ?>
+										<select name="store_closing_close_day">
+											<option value="1" <?php if($store_closing_close_day == '1') { echo 'selected="selected"'; } ?>><?php _e('Monday', $this->textdomain); ?></option>
+											<option value="2" <?php if($store_closing_close_day == '2') { echo 'selected="selected"'; } ?>><?php _e('Tuesday', $this->textdomain); ?></option>
+											<option value="3" <?php if($store_closing_close_day == '3') { echo 'selected="selected"'; } ?>><?php _e('Wednesday', $this->textdomain); ?></option>
+											<option value="4" <?php if($store_closing_close_day == '4') { echo 'selected="selected"'; } ?>><?php _e('Thursday', $this->textdomain); ?></option>
+											<option value="5" <?php if($store_closing_close_day == '5') { echo 'selected="selected"'; } ?>><?php _e('Friday', $this->textdomain); ?></option>
+											<option value="6" <?php if($store_closing_close_day == '6') { echo 'selected="selected"'; } ?>><?php _e('Saturday', $this->textdomain); ?></option>
+											<option value="7" <?php if($store_closing_close_day == '7') { echo 'selected="selected"'; } ?>><?php _e('Sunday', $this->textdomain); ?></option>
+										</select>
+										<?php _e('at', $this->textdomain); ?>
+										<input type="text" value="<?php echo esc_attr($store_closing_close_time); ?>" name="store_closing_close_time"/>
+									</li>
 									<li><?php _e('Force Store as Open will cause the Store to remain Open until this option is deselected', $this->textdomain); ?></li>
 									<li><?php _e('Force Store as Closed will cause the Store to remain Closed until this option is deselected', $this->textdomain); ?></li>
 								</ul>
@@ -275,45 +312,76 @@ if(!class_exists('Store_Closing_Override'))
 		 */
 		public function is_store_closed()
 		{
-			/*
-			// If there was a hook to any of the following
-			if( $this->has_class_action('woocommerce_before_add_to_cart_button', 'storeclosingget', 'storeclosing_show') ||
-				$this->has_class_action('woocommerce_review_order_before_payment', 'storeclosingget', 'storeclosing_show') ||
-				$this->has_class_action('woocommerce_after_single_product', 'storeclosingget', 'storeclosing_disable') ||
-				$this->has_class_action('woocommerce_proceed_to_checkout', 'storeclosingget', 'storeclosing_disable') ||
-				$this->has_class_action('woocommerce_review_order_before_submit', 'storeclosingget', 'storeclosing_disable')
-			){
-				// Store is Closed
-				return true;
-			}
-			else
-			{
-				// Store is Opened
-				return false;
-			}
-			*/
-			$now = new DateTime('Now', new DateTimeZone('America/New_York'));
-			$open = new DateTime('12:00', new DateTimeZone('America/New_York'));
-			$close = new DateTime('7:30', new DateTimeZone('America/New_York'));
+			// Gets the option for the store override found in the admin menu
+			$store_closing_open_day = get_option('store_closing_open_day') ? get_option('store_closing_open_day') : '6';
+			$store_closing_open_time = get_option('store_closing_open_time') ? get_option('store_closing_open_time') : '12:00';
+			$store_closing_close_day = get_option('store_closing_close_day') ? get_option('store_closing_close_day') : '3';
+			$store_closing_close_time = get_option('store_closing_close_time') ? get_option('store_closing_close_time') : '7:30';
 
+			// Get the time of opening, closing, and now
+			$now = new DateTime('Now', new DateTimeZone('America/New_York'));
+			$open = new DateTime($store_closing_open_time, new DateTimeZone('America/New_York'));
+			$close = new DateTime($store_closing_close_time, new DateTimeZone('America/New_York'));
+
+			// Format dates
 			$day_of_the_week = $now->format("N");
 			$time_of_the_day = $now->format("H:i");
 
-			if(
-				// Monday, Tuesday, or Sunday
-				in_array($day_of_the_week, array(1, 2, 7)) ||
-				// Saturday after 12:00
-				($day_of_the_week == 6 &&
-					$now->getTimestamp() > $open->getTimestamp()) ||
-				// Wednesday Before 7:30
-				($day_of_the_week == 3 &&
-					$now->getTimestamp() < $close->getTimestamp())
-			){
-				return false;
+			// If there is an overlap in days of the week for opening and closing
+			if($store_closing_open_day > $store_closing_close_day)
+			{
+				if(
+					// If the current day of the week is exclusively between the opening and closing day when there is an overlap in days of the week
+					in_array($day_of_the_week, array_diff(range(1, 7), range($store_closing_close_day, $store_closing_open_day))) ||
+					// If today is on the opening day and after opening time
+					($day_of_the_week == $store_closing_open_day && $now->getTimestamp() > $open->getTimestamp()) ||
+					// If today is on the closing day and before closing time
+					($day_of_the_week == $store_closing_close_day && $now->getTimestamp() < $close->getTimestamp())
+				){
+					// The store is still open
+					return false;
+				}
+				else
+				{
+					// The store is closed
+					return true;
+				}
 			}
+			// If there is no overlap in days of the week for opening and closing
+			elseif($store_closing_open_day < $store_closing_close_day)
+			{
+				if(
+					// If the current day of the week is exclusively between the opening and closing day when there is no overlap in days of the week
+					in_array($day_of_the_week, array_slice(array_intersect(range(1, 7), range($store_closing_open_day, $store_closing_close_day)), 1, -1)) ||
+					// If today is on the opening day and after opening time
+					($day_of_the_week == $store_closing_open_day && $now->getTimestamp() > $open->getTimestamp()) ||
+					// If today is on the closing day and before closing time
+					($day_of_the_week == $store_closing_close_day && $now->getTimestamp() < $close->getTimestamp())
+				){
+					// The store is still open
+					return false;
+				}
+				else
+				{
+					// The store is closed
+					return true;
+				}
+			}
+			// If the opening and closing days are the same
 			else
 			{
-				return true;
+				if(
+					// If now is after opening time and before closing time
+					($now->getTimestamp() > $open->getTimestamp()) && ($now->getTimestamp() < $close->getTimestamp())
+				){
+					// The store is still open
+					return false;
+				}
+				else
+				{
+					// The store is closed
+					return true;
+				}
 			}
 		}
 
